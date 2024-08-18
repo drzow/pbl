@@ -24,5 +24,5 @@ def get_key(type, id):
 if __name__ == '__main__':
     import time
 
-    print 'test', get('test', '1')
+    print ('test', get('test', '1'))
     put('test', '1', time.time())

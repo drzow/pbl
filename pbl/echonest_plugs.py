@@ -39,9 +39,9 @@
         }
 '''
 
-from track_manager import tlib
-from engine import PBLException
-import utils
+from pbl.track_manager import tlib
+from pbl.engine import PBLException
+import pbl.utils
 import pprint
 import pyen
 
@@ -156,22 +156,22 @@ def _annotate_tracks_with_echonest_data(tids):
         uris = [ 'spotify:track:' + tid for tid in otids]
         try:
             if debug:
-                print 'getting echonest info for', otids
+                print ('getting echonest info for', otids)
             response = _get_en().get('song/profile', track_id=uris, bucket=_en_song_buckets)
             res = set()
             for song in response['songs']:
                 for track in song['tracks']:
-                    tid = utils.uri_to_id(track['foreign_id'])
+                    tid = pbl.utils.uri_to_id(track['foreign_id'])
                     if tid in stids:
                         res.add(tid)
                         tlib.annotate_track(tid, 'echonest', _flatten_en_song(song, tid))
             diff = stids - res
             if len(diff) > 0:
                 pass
-                #print 'requested', len(stids), 'collected', len(res)
+                #print ('requested', len(stids), 'collected', len(res))
         except pyen.PyenException as e:
-            print 'annotate_tracks_with_echonest_data:no info for', otids
-            print 'echonest error', e.http_status, e.code, e.msg
+            print ('annotate_tracks_with_echonest_data:no info for', otids)
+            print ('echonest error', e.http_status, e.code, e.msg)
             for tid in otids:
                 tlib.annotate_track(tid, 'echonest', {'empty': 'empty'})
     
@@ -190,7 +190,7 @@ def _flatten_en_song(song, id):
         del song['analysis_url']
 
     for track in song['tracks']:
-        tid = utils.uri_to_id(track['foreign_id'])
+        tid = pbl.utils.uri_to_id(track['foreign_id'])
         if id == tid:
             if 'album_name' in track:
                 song['album_name'] = track['album_name']
@@ -203,7 +203,7 @@ def _flatten_en_song(song, id):
     return song
 
 def _add_song(source, song):
-    id = utils.uri_to_id(song['tracks'][0]['foreign_id'])
+    id = pbl.utils.uri_to_id(song['tracks'][0]['foreign_id'])
     dur = int(song['audio_summary']['duration'] )
     tlib.make_track(id, song['title'], song['artist_name'], dur, source)
     tlib.annotate_track(id, 'echonest', _flatten_en_song(song, id))

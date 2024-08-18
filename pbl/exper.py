@@ -53,7 +53,7 @@ class TrackLibrary(object):
         
 
 
-    def is_valid_attribute(attr):
+    def is_valid_attribute(self, attr):
         return attr in self.attr_map
 
     def flatten_en_song(self, song):
@@ -254,8 +254,8 @@ class EchoNestPlaylist(object):
                 track['en_song'] = tlib.flatten_en_song(song)
                 if False:
                     pprint.pprint(track)
-                    print
-                    print
+                    print("")
+                    print("")
                 tlib.add_track(self.name, track['id'], track)
 
         if len(self.buffer) > 0:
@@ -442,7 +442,7 @@ class Sample:
 class Concatenate:
     def __init__(self, source_list):
         for s in source_list:
-            print s.name
+            print (s.name)
         self.name = 'concatenating ' + ' '.join([s.name for s in source_list])
         self.source_list = source_list
         self.index = 0
@@ -550,7 +550,7 @@ class TrackFilter:
                     return track
                 else:
                     if self.debug:
-                        print 'filtered out', tlib.get_tn(track)
+                        print ('filtered out', tlib.get_tn(track))
             else:
                 break
         return track
@@ -564,7 +564,7 @@ class Dumper:
     def next_track(self):
         track = self.source.next_track()
         if track:
-            print self.which, tlib.get_tn(track)
+            print (self.which, tlib.get_tn(track))
             self.which += 1
         return track
 
@@ -577,8 +577,8 @@ class Debugger:
         track = self.source.next_track()
         if track:
             tinfo = tlib.get_track(track)
-            print json.dumps(tinfo, indent=4)
-            print
+            print (json.dumps(tinfo, indent=4))
+            print("")
         return track
 
 
@@ -587,7 +587,7 @@ def tids_to_tracks(tids):
     start = 0
     out = []
 
-    for start in xrange(0, len(tids), max_batch):
+    for start in range(0, len(tids), max_batch):
         ttids = tids[start:start+max_batch]
         results = spotify.tracks(ttids)
         out.extend(results['tracks'])
@@ -595,7 +595,7 @@ def tids_to_tracks(tids):
 
 def runner(source, max_tracks = 500):
     pipe = Dumper(source)
-    print 'running', source.name
+    print ('running', source.name)
     which = 0
     while which < max_tracks:
         track = pipe.next_track()

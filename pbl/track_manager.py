@@ -1,7 +1,7 @@
-import cache_manager
+from pbl.cache_manager import *
 
 #cache = cache_manager.get_cache("NOCACHE")
-cache = cache_manager.get_cache()
+cache = get_cache()
 
 class TrackLibrary(object):
     ''' manages track attributes
@@ -18,7 +18,7 @@ class TrackLibrary(object):
             :param tid: the track id
             :param info: the track info
         '''
-        # print "add_track", source_name, info['title'], info['artist']
+        # print ("add_track", source_name, info['title'], info['artist'])
         info['src'] = source_name
         self.tmap[tid] = info
 
@@ -63,7 +63,7 @@ class TrackLibrary(object):
             'duration': dur,
             'src': source
         }
-        # print "make_track", source, title, artist
+        # print ("make_track", source, title, artist)
         self.tmap[id] = track
         return id
 
@@ -74,7 +74,7 @@ class TrackLibrary(object):
             if add_to_cache and cache.get(name, tid) == None:
                 cache.put(name, tid, data)
         else:
-            print "can't annotate missing track", tid
+            print ("can't annotate missing track", tid)
 
     def annotate_tracks_with_attribute(self, tids, attr):
         fields = attr.split('.')
@@ -116,8 +116,8 @@ class TrackLibrary(object):
                 type, attr = fields
                 if not type in track and type in self.annotators:
                     if self.annotators[type]['batch_size'] > 1 and not self.missing_annotator_reported:
-                        print 'last minute fetch of', type, 'info for', tid
-                        print 'consider adding an annotator to speed things up'
+                        print ('last minute fetch of', type, 'info for', tid)
+                        print ('consider adding an annotator to speed things up')
                         self.missing_annotator_reported = True
                     self.annotators[type]['annotator']([tid])
                 if type in track:
@@ -125,7 +125,7 @@ class TrackLibrary(object):
                     if type_info and attr in type_info:
                         return type_info[attr]
             else:
-                print 'bad attr path', attr
+                print ('bad attr path', attr)
 
         return None
 

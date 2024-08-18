@@ -95,18 +95,18 @@
             }
         }
 '''
-from track_manager import tlib
-import engine
+from pbl.track_manager import tlib
+import pbl.engine
 import spotipy
 import spotipy.util
 import pprint
 import simplejson as json
-import cache_manager
+import pbl.cache_manager
 
 from spotipy.oauth2 import SpotifyClientCredentials
 
 
-cache = cache_manager.get_cache()
+cache = pbl.cache_manager.get_cache()
 
 class PlaylistSource(object):
     '''
@@ -162,7 +162,7 @@ class PlaylistSource(object):
         try:
             results = _get_spotify().playlist_tracks(playlist_id, limit=self.limit, offset=self.next_offset)
         except spotipy.SpotifyException as e:
-            raise engine.PBLException(self, e.msg)
+            raise pbl.engine.PBLException(self, e.msg)
 
         self.total = results['total']
         for item in results['items']:
@@ -183,7 +183,7 @@ class PlaylistSource(object):
                 msg = "Can't find playlist named " + self.name
                 if self.user:
                     msg += ' for user ' + self.user
-                raise engine.PBLException(self, msg)
+                raise pbl.engine.PBLException(self, msg)
 
         if self.uri and self.cur_index >= len(self.tracks) \
             and len(self.tracks) < self.total:
@@ -214,13 +214,13 @@ class TrackSource(object):
             try:
                 results = _get_spotify().tracks(self.uris)
             except spotipy.SpotifyException as e:
-                raise engine.PBLException(self, e.msg)
+                raise pbl.engine.PBLException(self, e.msg)
             for track in results['tracks']:
                 if track and 'id' in track:
                     self.buffer.append(track['id'])
                     _add_track(self.name, track)
                 else:
-                    raise engine.PBLException(self, 'bad track')
+                    raise pbl.engine.PBLException(self, 'bad track')
 
         if len(self.buffer) > 0:
             return self.buffer.pop(0)
@@ -246,9 +246,9 @@ class TrackSourceByName(object):
                     self.uri = track['id']
                     return self.uri
                 else:
-                    raise engine.PBLException(self, "Can't find that track")
+                    raise pbl.engine.PBLException(self, "Can't find that track")
             except spotipy.SpotifyException as e:
-                raise engine.PBLException(self, e.msg)
+                raise pbl.engine.PBLException(self, e.msg)
         else:
             return None
 
@@ -287,14 +287,14 @@ class AlbumSource(object):
                 try:
                     results = _get_spotify().album_tracks(id)
                 except spotipy.SpotifyException as e:
-                    raise engine.PBLException(self, e.msg)
+                    raise pbl.engine.PBLException(self, e.msg)
 
                 for track in results['items']:
                     if track and 'id' in track:
                         self.buffer.append(track['id'])
                         _add_track(self.name, track)
             else:
-                raise engine.PBLException(self, "Can't find that album");
+                raise pbl.engine.PBLException(self, "Can't find that album");
 
         if len(self.buffer) > 0:
             return self.buffer.pop(0)
@@ -325,13 +325,13 @@ class ArtistTopTracks(object):
                 try:
                     results = _get_spotify().artist_top_tracks(id)
                 except spotipy.SpotifyException as e:
-                    raise engine.PBLException(self, e.msg)
+                    raise pbl.engine.PBLException(self, e.msg)
                 for track in results['tracks']:
                     if track and 'id' in track:
                         self.buffer.append(track['id'])
                         _add_track(self.name, track)
             else:
-                raise engine.PBLException(self, "Can't find that artist")
+                raise pbl.engine.PBLException(self, "Can't find that artist")
 
         if len(self.buffer) > 0:
             return self.buffer.pop(0)
@@ -385,36 +385,36 @@ class PlaylistSave(object):
                     else:
                         uri = _find_playlist_by_name(sp, self.user, self.playlist_name)
                     if uri:
-                        print 'found', self.playlist_name, uri
+                        print ('found', self.playlist_name, uri)
                     else:
-                        print 'creating new', self.playlist_name, 'playlist'
+                        print ('creating new', self.playlist_name, 'playlist')
                         response = sp.user_playlist_create(self.user, self.playlist_name)
                         uri = response['uri']
                     pid =  uri.split(':')[4]
             if pid:
                 batch_size = 100
                 uris = [ 'spotify:track:' + id for id in self.buffer]
-                for start in xrange(0, len(uris), batch_size):
+                for start in range(0, len(uris), batch_size):
                     turis = uris[start:start+batch_size]
                     if start == 0 and not self.append:
-                        print 'replace', start
+                        print ('replace', start)
                         sp.user_playlist_replace_tracks(user, pid, turis)
                     else:
-                        print 'add', start
+                        print ('add', start)
                         sp.user_playlist_add_tracks(user, pid, turis)
         else:
-            print "Can't get authenticated access to spotify"
+            print ("Can't get authenticated access to spotify")
 
 def _get_spotify():
-    spotify = engine.getEnv('spotify')
+    spotify = pbl.engine.getEnv('spotify')
     if spotify == None:
-        auth_token = engine.getEnv('spotify_auth_token')
+        auth_token = pbl.engine.getEnv('spotify_auth_token')
         if auth_token:
             spotify = spotipy.Spotify(auth=auth_token)
         else:
             spotify = spotipy.Spotify(client_credentials_manager=SpotifyClientCredentials())
         spotify.trace_out = True
-        engine.setEnv('spotify', spotify)
+        pbl.engine.setEnv('spotify', spotify)
     return spotify
 
 def _get_auth_spotify(user):
@@ -431,7 +431,7 @@ def _get_auth_spotify(user):
 
 def _find_playlist_by_name(sp, user, name):
     batch_size = 50
-    for start in xrange(0, 1000, batch_size):
+    for start in range(0, 1000, batch_size):
         playlists = sp.user_playlists(user, limit=batch_size, offset=start)
         for playlist in playlists['items']:
             if playlist['name'] == name:
@@ -455,7 +455,7 @@ def _find_track_by_name(sp, name):
 def _annotate_tracks_with_spotify_data_old(tids):
     tids = tlib.annotate_tracks_from_cache('spotify', tids)
     if len(tids) > 0:
-        # print 'annotate tracks with spotify', tids
+        # print ('annotate tracks with spotify', tids)
         results = _get_spotify().tracks(tids)
         for track in results['tracks']:
             if track and 'id' in track:
@@ -463,10 +463,10 @@ def _annotate_tracks_with_spotify_data_old(tids):
 
 def _annotate_tracks_with_spotify_data_full(tids):
     # full annotation
-    print "spotify full annotate", len(tids)
+    print ("spotify full annotate", len(tids))
     tids = tlib.annotate_tracks_from_cache('spotify', tids)
     if len(tids) > 0:
-        # print 'annotate tracks with spotify', tids
+        # print ('annotate tracks with spotify', tids)
         results = _get_spotify().tracks(tids)
         album_ids = set()
         artist_ids = set()
@@ -475,8 +475,8 @@ def _annotate_tracks_with_spotify_data_full(tids):
             for artist in track['artists']:
                 artist_ids.add(artist['id'])
 
-        print "  spotify artist annotate", len(artist_ids)
-        print "  spotify album annotate", len(album_ids)
+        print ("  spotify artist annotate", len(artist_ids))
+        print ("  spotify album annotate", len(album_ids))
         albums = get_albums(album_ids)
         artists = get_artists(artist_ids)
 
@@ -586,7 +586,7 @@ def _annotate_tracks_with_audio_features(tids):
             results = _get_spotify().audio_features(otids)
             for track in results:
                 if track and 'id' in track:
-                    # print 'audio', json.dumps(track, indent=4)
+                    # print ('audio', json.dumps(track, indent=4))
                     tlib.annotate_track(track['id'], 'audio', track)
         except spotipy.SpotifyException as e:
             # we may get a 404 if we request features for a single
@@ -595,7 +595,7 @@ def _annotate_tracks_with_audio_features(tids):
             if e.http_status >= 400 and e.http_status < 500:
                 pass
             else:
-                raise engine.PBLException(self, e.msg)
+                raise pbl.engine.PBLException(PlaylistSource.__name__, e.msg)
 
 
 def _add_track(source, track):
@@ -652,7 +652,7 @@ tlib.add_annotator(_audio_annotator)
 
 def test_urls():
     def test(uri):
-        print uri, '-->', normalize_uri(uri)
+        print (uri, '-->', normalize_uri(uri))
 
     test("spotify:user:plamere:playlist:3F1VlEt8oRsKOk9hlp5JDF")
     test("https://open.spotify.com/user/plamere/playlist/3F1VlEt8oRsKOk9hlp5JDF")
@@ -671,8 +671,8 @@ def test_full_annotation():
 
     for tid in tids:
         track = tlib.get_track(tid)
-        print json.dumps(track, indent=4)
-        print
+        print (json.dumps(track, indent=4))
+        print("")
 
 if __name__ == '__main__':
     import nocache

@@ -1,7 +1,7 @@
 VERSION='1.0.0'
 
-from engine import *
-from standard_plugs import *
-from spotify_plugs import *
-from echonest_plugs import *
+from pbl.engine import *
+from pbl.standard_plugs import *
+from pbl.spotify_plugs import *
+from pbl.echonest_plugs import *
 

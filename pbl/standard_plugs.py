@@ -2,7 +2,7 @@
 '''
 import random
 import datetime
-from track_manager import tlib
+from pbl.track_manager import tlib
 import json
 
 class Annotator(object):
@@ -688,7 +688,7 @@ class TrackFilter(object):
                     return track
                 else:
                     if self.debug:
-                        print 'filtered out', tlib.get_tn(track)
+                        print ('filtered out', tlib.get_tn(track))
             else:
                 break
         return track
@@ -716,7 +716,7 @@ class ArtistFilter(object):
                     return track
                 else:
                     if self.debug:
-                        print 'filtered out', tlib.get_tn(track)
+                        print ('filtered out', tlib.get_tn(track))
             else:
                 break
         return track
@@ -738,12 +738,12 @@ class Dumper(object):
     def next_track(self):
         track = self.source.next_track()
         if track:
-            print self.which, tlib.get_tn(track)
+            print (self.which, tlib.get_tn(track))
             if len(self.props) > 0:
                 for prop in self.props:
                     val = tlib.get_attr(track, prop)
                     if val != None:
-                        print '   ', prop, '->', val
+                        print ('   ', prop, '->', val)
             self.which += 1
         return track
 
@@ -763,8 +763,8 @@ class Debugger(object):
         track = self.source.next_track()
         if track:
             tinfo = tlib.get_track(track)
-            print json.dumps(tinfo, indent=4)
-            print
+            print (json.dumps(tinfo, indent=4))
+            print("")
         return track
 
 class SaveToJson(object):
@@ -799,7 +799,7 @@ class SaveToJson(object):
             if t:
                 out.append(t)
             
-        print >> f, json.dumps(out, indent=4)
+        print("") >> f, json.dumps(out, indent=4)
         f.close()
 
 
